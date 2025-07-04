@@ -13,7 +13,7 @@ const PasswordResetPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
 
-  const { resetToken } = useParams(); // Get "resetToken" from URL parameters
+  const { resetToken } = useParams(); // Extract token from URL
 
   const handleCredentials = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -23,19 +23,19 @@ const PasswordResetPage = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // If any field is missing
+    // Field validation
     if (!credentials.password || !credentials.confirmPassword) {
       setIsLoading(false);
-      return Notify("Please Fill all the Feilds", "warn");
+      return Notify("Please Fill all the Fields", "warn");
     }
 
-    // If password and confirm password doesn't match
+    // Password match check
     if (credentials.password !== credentials.confirmPassword) {
       setIsLoading(false);
       return Notify("Passwords Do Not Match", "warn");
     }
 
-    // If password is less than 8 characters
+    // Minimum password length check
     if (credentials.password.length < 8) {
       setIsLoading(false);
       return Notify("Password must be at least 8 characters", "warn");
@@ -51,6 +51,7 @@ const PasswordResetPage = () => {
           password: credentials.password,
         }),
       });
+
       const data = await response.json();
 
       if (data.success) {
@@ -87,7 +88,7 @@ const PasswordResetPage = () => {
         <Form className="auth__form" onSubmit={passwordResetHandler}>
           <h4 className="mb-3">Create new password</h4>
           <p className="text-muted mb-4">
-            Your new password must be different from previous used passwords.
+            Your new password must be different from previously used passwords.
           </p>
 
           <Form.Group className="mb-3" controlId="password">
@@ -98,7 +99,7 @@ const PasswordResetPage = () => {
               tabIndex="1"
               placeholder="Enter new password"
               value={credentials.password}
-              onChange={(e) => handleCredentials(e)}
+              onChange={handleCredentials}
             />
             <Form.Text className="text-muted">
               Must be at least 8 characters.
@@ -113,7 +114,7 @@ const PasswordResetPage = () => {
               tabIndex="2"
               placeholder="Confirm new password"
               value={credentials.confirmPassword}
-              onChange={(e) => handleCredentials(e)}
+              onChange={handleCredentials}
             />
             <Form.Text className="text-muted">
               Both passwords must match.

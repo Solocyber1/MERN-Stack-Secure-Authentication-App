@@ -90,8 +90,7 @@ const LoginPage = () => {
         <Link
           to="/forgotPassword"
           tabIndex="4"
-          className="d-flex flex-row-reverse text-decoration-none mb-3"
-        >
+          className="d-flex flex-row-reverse text-decoration-none mb-3"        >
           Forgot password?
         </Link>
       </Form.Group>

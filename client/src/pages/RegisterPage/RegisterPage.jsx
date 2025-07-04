@@ -15,7 +15,7 @@ const RegisterPage = () => {
     profilePic: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [imagePreview, setimagePreview] = useState(IMAGES.user); // Default image for preview
+  const [imagePreview, setimagePreview] = useState(IMAGES.user);
 
   const navigate = useNavigate();
   const { setAuth } = AuthState();
@@ -26,42 +26,38 @@ const RegisterPage = () => {
 
   const handleProfilePic = async (e) => {
     setIsLoading(true);
-    const profilePic = e.target.files[0]; // Get the file
+    const profilePic = e.target.files[0];
 
-    // Check file type
     if (
       profilePic.type !== "image/jpeg" &&
       profilePic.type !== "image/jpg" &&
       profilePic.type !== "image/png"
     ) {
-      e.target.value = null; // Clear upload field
+      e.target.value = null;
       setimagePreview(IMAGES.user);
       setIsLoading(false);
       return Notify("Only .jpeg, .jpg and .png supported", "warn");
     }
 
-    // Check file size
     if (profilePic.size > 1 * 1024 * 1024) {
-      e.target.value = null; // Clear upload field
+      e.target.value = null;
       setimagePreview(IMAGES.user);
       setIsLoading(false);
       return Notify("Please upload image under 1 MB", "warn");
     }
 
-    // Save the image in FormData object
     const formData = new FormData();
-    formData.append("file", profilePic); // Contains the file
+    formData.append("file", profilePic);
     formData.append(
       "upload_preset",
       `${process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET}`
-    ); // Upload preset in Cloudinary
+    );
     formData.append(
       "cloud_name",
       `${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}`
-    ); // Cloud name in Cloudinary
+    );
 
     try {
-      // Upload image to cloudinary if user selected an image
       const cloudinaryResponse = await fetch(
         `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload`,
         {
@@ -71,21 +67,19 @@ const RegisterPage = () => {
       );
       const cloudinaryData = await cloudinaryResponse.json();
 
-      // If profile pic is uploaded, set the image URL for registration
       setCredentials({
         ...credentials,
         profilePic: cloudinaryData.secure_url.toString(),
       });
 
-      // Image preview logic
       const reader = new FileReader();
       reader.readAsDataURL(profilePic);
       reader.onload = () => setimagePreview(reader.result);
 
       setIsLoading(false);
-      return Notify("Profile pictute uploaded", "success");
+      return Notify("Profile picture uploaded", "success");
     } catch (error) {
-      e.target.value = null; // Clear upload field
+      e.target.value = null;
       setimagePreview(IMAGES.user);
       setIsLoading(false);
       return Notify("Internal server error", "error");
@@ -96,7 +90,7 @@ const RegisterPage = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // If any field is missing
+    // Validation: all required fields
     if (
       !credentials.name ||
       !credentials.email ||
@@ -104,23 +98,22 @@ const RegisterPage = () => {
       !credentials.confirmPassword
     ) {
       setIsLoading(false);
-      return Notify("Please Fill all the Feilds", "warn");
+      return Notify("Please Fill all the Fields", "warn");
     }
 
-    // If password and confirm password doesn't match
+    // Passwords must match
     if (credentials.password !== credentials.confirmPassword) {
       setIsLoading(false);
       return Notify("Passwords Do Not Match", "warn");
     }
 
-    // If password is less than 8 characters
+    // Minimum password length
     if (credentials.password.length < 8) {
       setIsLoading(false);
       return Notify("Password must be at least 8 characters", "warn");
     }
 
     try {
-      // Register user
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -133,13 +126,14 @@ const RegisterPage = () => {
           profilePic: credentials.profilePic,
         }),
       });
+
       const data = await response.json();
 
       if (data.success) {
-        localStorage.setItem("auth", JSON.stringify(data)); // Save auth details in local storage
+        localStorage.setItem("auth", JSON.stringify(data));
         setAuth(data);
         setIsLoading(false);
-        navigate("/"); // Go to home page
+        navigate("/");
         return Notify("Your account has been successfully created", "success");
       } else {
         setIsLoading(false);
@@ -173,7 +167,7 @@ const RegisterPage = () => {
           tabIndex="1"
           placeholder="Full name"
           value={credentials.name}
-          onChange={(e) => handleCredentials(e)}
+          onChange={handleCredentials}
         />
       </Form.Group>
 
@@ -185,7 +179,7 @@ const RegisterPage = () => {
           tabIndex="2"
           placeholder="Enter email"
           value={credentials.email}
-          onChange={(e) => handleCredentials(e)}
+          onChange={handleCredentials}
         />
       </Form.Group>
 
@@ -197,7 +191,7 @@ const RegisterPage = () => {
           tabIndex="3"
           placeholder="Password"
           value={credentials.password}
-          onChange={(e) => handleCredentials(e)}
+          onChange={handleCredentials}
         />
       </Form.Group>
 
@@ -209,7 +203,7 @@ const RegisterPage = () => {
           tabIndex="4"
           placeholder="Confirm password"
           value={credentials.confirmPassword}
-          onChange={(e) => handleCredentials(e)}
+          onChange={handleCredentials}
         />
       </Form.Group>
 
@@ -221,7 +215,7 @@ const RegisterPage = () => {
           name="profilePic"
           tabIndex="5"
           size="sm"
-          onChange={(e) => handleProfilePic(e)}
+          onChange={handleProfilePic}
         />
       </Form.Group>
 

@@ -1,8 +1,13 @@
+import logo from "./logo.png";
+import email from "./email.svg";
+import green_check from "./green_check.svg";
+import user from "./user.svg";
+
 const IMAGES = {
-  logo: require("./logo.png"),
-  email: require("./email.svg").default,
-  green_check: require("./green_check.svg").default, // Remember to use .default with SVG images
-  user: require("./user.svg").default, // Remember to use .default with SVG images
+  logo,
+  email,
+  green_check,
+  user,
 };
 
 export default IMAGES;

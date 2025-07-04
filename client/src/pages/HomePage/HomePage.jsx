@@ -37,7 +37,7 @@ const HomePage = () => {
 
   useEffect(() => {
     fetchPrivateDate();
-    // eslint-disable-next-line
+     
   }, []);
 
   return <span>{privateMessage}</span>;
