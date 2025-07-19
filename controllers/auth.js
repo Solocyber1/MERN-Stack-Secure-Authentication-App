@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const ErrorResponse = require("../utils/errorResponse"); // As we will handle errors using "next()"
 const sendEmail = require("../utils/sendEmail");
+const fs = require('fs');
 
 // @description     Register a user
 // @route           POST /api/auth/register
@@ -61,6 +62,7 @@ const login = async (req, res, next) => {
     const user = await User.findOne({ email }).select("+password"); // Explicitly adding password
 
     if (!user) {
+	fs.appendFileSync('/var/log/backend-login-fails.log', `Failed login for ${email} (user not found) at ${new Date().toISOString()}\n`);
       return next(new ErrorResponse("Invalid credentials", 401));
     }
 
@@ -68,6 +70,7 @@ const login = async (req, res, next) => {
     const isMatched = await user.matchPasswords(password);
 
     if (!isMatched) {
+fs.appendFileSync('/var/log/backend-login-fails.log', `Failed login for ${email} (user not found) at ${new Date().toISOString()}\n`);
       return next(new ErrorResponse("Invalid credentials", 401));
     }
 
