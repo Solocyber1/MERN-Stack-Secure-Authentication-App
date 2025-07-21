@@ -1,135 +1,64 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
-const express = require("express");
-const path = require("path");
-const helmet = require("helmet");
-const cookieParser = require("cookie-parser");
-const dotenv = require("dotenv");
-const cors = require("cors");
-const rateLimit = require("express-rate-limit"); 
+const path = require("path")
+const { v4: uuidv4 } = require("uuid")
+const express = require("express")
+const session = require("express-session")
+const router = require("./router")
+const connection = require("./model")
 
-dotenv.config({ path: "./.env" });
-
-const connectDB = require("./config/db");
-const errorHandler = require("./middleware/error");
-
-const app = express();
-app.set('trust proxy', 1);
+const app = express()
 app.disable("x-powered-by");
+const port = process.env.port || 3001
 
-//  Remove "Server" header
-app.use((req, res, next) => {
-  res.removeHeader("Server");
-  next();
-});
+app.use(express.json())
 
-//  Prevent caching of sensitive routes
-app.use((req, res, next) => {
-  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
-  next();
-});
+app.use(express.urlencoded({ extended: false }))
 
-const PORT = process.env.PORT || 5000;
-
-//  Rate Limiting Middleware
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  max: 100,                  // 100 requests per 15 minutes per IP
-  message: "Too many requests from this IP, please try again later."
-});
-app.use("/api", apiLimiter);  //  Apply limiter to all /api routes
-
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected!!"))
-  .catch((err) => console.error("MongoDB error:", err));
-
-// Middleware
-app.use(express.json());
-app.use(cookieParser());
-
-// ✅ CORS Configuration
-const allowedOrigins = [
-  "http://localhost:3000",        // dev frontend
-  "http://127.0.0.1:3000",
-  "http://localhost:5000",	
-  "https://yourdomain.com",       // production frontend
-];
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-};
-app.use(cors(corsOptions));
-
-// ✅ Security Headers via Helmet
 app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "https://apis.google.com"],
-        styleSrc: ["'self'", "https://fonts.googleapis.com"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:"],
-        connectSrc: ["'self'", "http://localhost:3000"],
-        upgradeInsecureRequests: [],
-      },
-    },
-  })
-);
-app.use(helmet.noSniff());
+	session({
+		secret: uuidv4(),
+		resave: false,
+		saveUninitialized: true,
+	})
+)
 
-connectDB();
+app.use((req, res, next) => {
+	if (!req.user) {
+		res.header(
+			"Cache-Control",
+			"private, no-cache, no-store, must-revalidate"
+		)
+		res.header("Expires", "-1")
+		res.header("Pragma", "no-cache")
+	}
+	next()
+})
 
-// ✅ CSRF Token Route
-app.use("/api", require("./routes/csrf"));
+app.use("/assets", express.static(path.join(__dirname, "assets")))
 
-// API Routes
-app.use("/api/auth", require("./routes/auth"));
+app.use("/route", router)
 
-const { protect } = require("./middleware/auth");
-app.use("/api/private", protect, require("./routes/private"));
+app.set("view engine", "ejs")
 
-// ✅ Deployment (with HSTS in production)
-if (process.env.NODE_ENV === "production") {
-  app.use(
-    helmet.hsts({
-      maxAge: 63072000,
-      includeSubDomains: true,
-      preload: true,
-    })
-  );
+app.get("/admin/:error?", (req, res) => {
+	try {
+		res.render("adminLogin",{error: req.params.error})
+	} catch (err) {
+		console.log(err.message)
+	}
+})
 
-  app.use(express.static(path.join(__dirname, "./client/build")));
+app.get("/:error?", (req, res) => {
+	try {
+		res.render("userLogin",{error: req.params.error})
+	} catch (err) {
+		console.log(err.message)
+	}
+})
 
-  app.get("*", (req, res) => {
-    return res.sendFile(
-      path.resolve(__dirname, "client", "build", "index.html")
-    );
-  });
-} else {
-  app.get("/", (req, res) => {
-    res.send("API is running");
-  });
-}
-
-// Error Handler
-app.use(errorHandler);
-
-const server = app.listen(PORT, () =>
-  console.log(`Server running on PORT ${PORT}`)
-);
-
-process.on("unhandledRejection", (err, promise) => {
-  console.log(`Logged Error: ${err.message}`);
-  server.close(() => process.exit(1));
-});
+app.listen(port, (err) => {
+	if (err) {
+		console.log("error creating server")
+	} else {
+		console.log(`Listening at http://localhost:${port}`)
+	}
+})

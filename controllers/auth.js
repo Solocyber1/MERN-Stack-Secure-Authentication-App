@@ -54,6 +54,10 @@ const register = async (req, res, next) => {
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+	
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      return next(new ErrorResponse("Invalid input type.", 400));
+    }
 
     if (!email || !password) {
       return next(new ErrorResponse("Please provide email and password", 400));
