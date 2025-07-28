@@ -1,3 +1,4 @@
+import api from "../../api/axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Form, Button, Spinner, Image } from "react-bootstrap";
@@ -114,35 +115,30 @@ const RegisterPage = () => {
     }
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: credentials.name,
-          email: credentials.email,
-          password: credentials.password,
-          profilePic: credentials.profilePic,
-        }),
-      });
+  const response = await api.post("/auth/register", {
+    name: credentials.name,
+    email: credentials.email,
+    password: credentials.password,
+    profilePic: credentials.profilePic,
+  });
 
-      const data = await response.json();
+  const data = response.data;
 
-      if (data.success) {
-        localStorage.setItem("auth", JSON.stringify(data));
-        setAuth(data);
-        setIsLoading(false);
-        navigate("/");
-        return Notify("Your account has been successfully created", "success");
-      } else {
-        setIsLoading(false);
-        return Notify(data.error, "error");
-      }
-    } catch (error) {
-      setIsLoading(false);
-      return Notify("Internal server error", "error");
-    }
+  if (data.success) {
+    localStorage.setItem("auth", JSON.stringify(data));
+    setAuth(data);
+    setIsLoading(false);
+    navigate("/");
+    return Notify("Your account has been successfully created", "success");
+  } else {
+    setIsLoading(false);
+    return Notify(data.error, "error");
+  }
+} catch (error) {
+  setIsLoading(false);
+  const message = error.response?.data?.error || "Internal server error";
+  return Notify(message, "error");
+}
   };
 
   return (

@@ -3,6 +3,7 @@ import { Form, Button, Spinner, Container } from "react-bootstrap";
 
 import IMAGES from "../../assets";
 import { Notify } from "../../utils";
+import api from "../../api/axios"; // ✅ Axios instance with CSRF config
 
 const ForgotPasswordScreen = () => {
   const [email, setEmail] = useState("");
@@ -13,23 +14,13 @@ const ForgotPasswordScreen = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // If any field is missing
     if (!email) {
       setIsLoading(false);
-      return Notify("Please Fill all the Feilds", "warn");
+      return Notify("Please Fill all the Fields", "warn");
     }
 
     try {
-      const response = await fetch("/api/auth/forgotPassword", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-        }),
-      });
-      const data = await response.json();
+      const { data } = await api.post("/auth/forgotPassword", { email });
 
       if (data.success) {
         setIsLoading(false);
@@ -41,7 +32,8 @@ const ForgotPasswordScreen = () => {
       }
     } catch (error) {
       setIsLoading(false);
-      return Notify("Internal server error", "error");
+      const message = error.response?.data?.error || "Internal server error";
+      return Notify(message, "error");
     }
   };
 
@@ -55,17 +47,16 @@ const ForgotPasswordScreen = () => {
             width="100px"
             alt="email sent successfully"
           />
-
           <p className="email__heading text-center fs-2">Check your mail</p>
           <p className="text-center text-muted fs-5">
-            We have sent a password recover instructions to your email.
+            We have sent a password recovery instructions to your email.
           </p>
         </Container>
       ) : (
         <Form className="auth__form" onSubmit={forgotPasswordHandler}>
           <h4 className="mb-3">Forgot your password?</h4>
           <p className="text-muted mb-4">
-            Enter a email associated with your account and we'll send an email
+            Enter an email associated with your account and we'll send an email
             with instructions to reset your password.
           </p>
 

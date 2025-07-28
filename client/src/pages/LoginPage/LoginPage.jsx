@@ -1,3 +1,4 @@
+import api from "../../api/axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Form, Button, Spinner } from "react-bootstrap";
@@ -21,43 +22,38 @@ const LoginPage = () => {
   };
 
   const loginHandler = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+  e.preventDefault();
+  setIsLoading(true);
 
-    // If any field is missing
-    if (!credentials.email || !credentials.password) {
+  if (!credentials.email || !credentials.password) {
+    setIsLoading(false);
+    return Notify("Please Fill all the Fields", "warn");
+  }
+
+  try {
+    const response = await api.post("/auth/login", {
+      email: credentials.email,
+      password: credentials.password,
+    });
+
+    const data = response.data;
+
+    if (data.success) {
+      localStorage.setItem("auth", JSON.stringify(data));
+      setAuth(data);
       setIsLoading(false);
-      return Notify("Please Fill all the Feilds", "warn");
-    }
-
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: credentials.email,
-          password: credentials.password,
-        }),
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        localStorage.setItem("auth", JSON.stringify(data)); // Save auth details in local storage
-        setAuth(data);
-        setIsLoading(false);
-        navigate("/"); // Go to home page
-        return Notify("You are successfully logged in", "success");
-      } else {
-        setIsLoading(false);
-        return Notify(data.error, "warn");
-      }
-    } catch (error) {
+      navigate("/");
+      return Notify("You are successfully logged in", "success");
+    } else {
       setIsLoading(false);
-      return Notify("Internal server error", "error");
+      return Notify(data.error, "warn");
     }
-  };
+  } catch (error) {
+    setIsLoading(false);
+    const message = error.response?.data?.error || "Internal server error";
+    return Notify(message, "error");
+  }
+};
 
   return (
     <Form className="auth__form" onSubmit={loginHandler}>

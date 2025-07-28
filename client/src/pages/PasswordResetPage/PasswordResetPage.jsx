@@ -4,6 +4,7 @@ import { Form, Button, Spinner, Container } from "react-bootstrap";
 
 import IMAGES from "../../assets";
 import { Notify } from "../../utils";
+import api from "../../api/axios"; // ✅ Use central axios instance
 
 const PasswordResetPage = () => {
   const [credentials, setCredentials] = useState({
@@ -13,7 +14,7 @@ const PasswordResetPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
 
-  const { resetToken } = useParams(); // Extract token from URL
+  const { resetToken } = useParams();
 
   const handleCredentials = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -23,36 +24,28 @@ const PasswordResetPage = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Field validation
+    // Validation
     if (!credentials.password || !credentials.confirmPassword) {
       setIsLoading(false);
       return Notify("Please Fill all the Fields", "warn");
     }
 
-    // Password match check
     if (credentials.password !== credentials.confirmPassword) {
       setIsLoading(false);
       return Notify("Passwords Do Not Match", "warn");
     }
 
-    // Minimum password length check
     if (credentials.password.length < 8) {
       setIsLoading(false);
       return Notify("Password must be at least 8 characters", "warn");
     }
 
     try {
-      const response = await fetch(`/api/auth/resetPassword/${resetToken}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          password: credentials.password,
-        }),
+      const response = await api.put(`/auth/resetPassword/${resetToken}`, {
+        password: credentials.password,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         setIsLoading(false);
@@ -64,7 +57,8 @@ const PasswordResetPage = () => {
       }
     } catch (error) {
       setIsLoading(false);
-      return Notify("Internal server error", "error");
+      const message = error.response?.data?.error || "Internal server error";
+      return Notify(message, "error");
     }
   };
 
@@ -78,7 +72,6 @@ const PasswordResetPage = () => {
             width="100px"
             alt="password changed successfully"
           />
-
           <p className="email__heading text-center fs-2">Password Changed!</p>
           <p className="text-center text-muted fs-5">
             Your password has been changed successfully.
