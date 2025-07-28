@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/rtewari056/mern-stack-authentication-boilerplate#readme",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
+    "bcryptjs": "^3.0.2",
     "connect-mongo": "^5.1.0",
     "connect-mongodb-session": "^5.0.0",
     "cookie-parser": "^1.4.7",
