@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"             # For root (backend)
+    schedule:
+      interval: "daily"        # Can also be "weekly" or "monthly"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "npm"
+    directory: "/client"       # For React frontend
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
